@@ -1,0 +1,15 @@
+name: Lint Podspec
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install CocoaPods
+        run: gem install cocoapods
+      - name: Lint Podspec
+        run: pod spec lint daikokuten.podspec

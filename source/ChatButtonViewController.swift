@@ -84,13 +84,17 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate {
             <script>
             window.onload = function() {
                 function initDaikokuten() {
+                    console.log("Daikokuten INIT")
                     if (typeof Daikokuten !== 'undefined') {
-                        new Daikokuten("\(userId)", "\(accessToken)", \(testMode));
+                        console.log("Daikokuten NEW")
+                        const daikokuten = new Daikokuten("\(userId)", "\(accessToken)", \(testMode), "ios");
                     } else {
-                        setTimeout(initDaikokuten, 100);
+                        console.log("Daikokuten RETRYING")
+                        setTimeout(initDaikokuten, 1000);
                     }
                 }
                 initDaikokuten();
+                console.log("Daikokuten START")
             };
             </script>
         </head>

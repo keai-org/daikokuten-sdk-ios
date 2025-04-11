@@ -13,3 +13,8 @@ Pod::Spec.new do |spec|
   spec.source_files = "source/*.{swift,h,m}"
   spec.swift_version = "5.0"
 end
+
+# pod spec lint DaikokutenSDK.podspec
+# pod trunk register your.email@example.com "Your Name" --description="DaikokutenSDK publisher"
+# pod trunk push DaikokutenSDK.podspec
+# pod spec lint DaikokutenSDK.podspec --verbose

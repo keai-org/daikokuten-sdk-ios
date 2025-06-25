@@ -19,11 +19,6 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         self.testMode = testMode
         super.init(nibName: nil, bundle: nil)
         
-        checkDeviceSecurity()
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 
     public override func viewDidLoad() {
@@ -31,14 +26,9 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         setupButton()
     }
 
-    private func checkDeviceSecurity() {
-        let paths = ["/Applications/Cydia.app", "/private/var/lib/apt"]
-        if paths.contains(where: { FileManager.default.fileExists(atPath: $0) }) {
-            fatalError("Device is jailbroken. ChatButtonViewController cannot be initialized.")
-        }
-    }
 
     private func setupButton() {
+        print("=====> LOADING BUTTON")
         button = UIButton(type: .system)
         button.setTitle("💬", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 24)
@@ -58,14 +48,15 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
     }
 
     private func setupWebView() {
+        print("=====> LOADING WEBVIEW 1")
         if modalView != nil { return }
-        
+        print("=====> LOADING WEBVIEW 2")
         modalView = UIView()
         modalView.backgroundColor = .white
         modalView.layer.cornerRadius = 10
         modalView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(modalView)
-        
+        print("=====> LOADING WEBVIEW 3")
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .nonPersistent()
         webView = WKWebView(frame: .zero, configuration: configuration)
@@ -73,7 +64,7 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         webView.uiDelegate = self
         webView.translatesAutoresizingMaskIntoConstraints = false
         modalView.addSubview(webView)
-        
+        print("=====> LOADING WEBVIEW 4")
         NSLayoutConstraint.activate([
             modalView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             modalView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
@@ -85,7 +76,7 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
             webView.trailingAnchor.constraint(equalTo: modalView.trailingAnchor),
             webView.bottomAnchor.constraint(equalTo: modalView.bottomAnchor)
         ])
-        
+        print("=====> LOADING WEBVIEW 5")
         let escapedUserId = userId.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
         let escapedClientId = clientId.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
         let testModeStr = testMode ? "true" : "false"
@@ -157,8 +148,11 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
     }
 
     @objc private func toggleModal() {
+        print("=====> TOGGLE MODAL")
         if modalView == nil {
+            print("=====> SETTING UP WEBVIEW")
             setupWebView()
+            print("=====> WEBVIEW SET UP")
         }
         modalView.isHidden = !modalView.isHidden
     }

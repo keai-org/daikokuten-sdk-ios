@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name         = "daikokuten"
-  spec.version      = "0.1.2"
+  spec.version      = "0.1.3"
   spec.summary      = "A simple chat SDK for iOS with WebSocket support."
   spec.description  = <<-DESC
                       daikokuten provides a chat button view with WebView integration and WebSocket capabilities for iOS apps.

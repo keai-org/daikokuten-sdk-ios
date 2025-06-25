@@ -9,7 +9,7 @@ Pod::Spec.new do |spec|
   spec.license      = { :type => "MIT", :file => "LICENSE" }
   spec.author       = { "KeAi" => "s.correa@equipo-ia.com" }
   spec.platform     = :ios, "13.0"
-  spec.source       = { :git => "https://github.com/keai-org/daikokuten-sdk-ios.git", :tag => "0.1.2" }
+  spec.source       = { :git => "https://github.com/keai-org/daikokuten-sdk-ios.git", :tag => "0.1.3" }
   spec.source_files = "source/*.{swift,h,m}"
   spec.swift_version = "5.0"
 end

@@ -26,28 +26,61 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
 
     public override func viewDidLoad() {
         super.viewDidLoad()
+        print("=====> VIEW DID LOAD")
         setupButton()
     }
 
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        print("=====> VIEW DID APPEAR")
+        print("=====> VIEW FRAME: \(view.frame)")
+        print("=====> BUTTON FRAME AFTER APPEAR: \(button.frame)")
+    }
 
     private func setupButton() {
-        print("=====> LOADING BUTTON")
+        print("=====> LOADING BUTTON 1")
         button = UIButton(type: .system)
         button.setTitle("💬", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 24)
         button.backgroundColor = .systemBlue
         button.layer.cornerRadius = 25
         button.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Add target with better debugging
         button.addTarget(self, action: #selector(toggleModal), for: .touchUpInside)
+        print("=====> BUTTON TARGET ADDED")
+        
+        // Also add target for touch down to test if button is responding at all
+        button.addTarget(self, action: #selector(buttonTouched), for: .touchDown)
         
         view.addSubview(button)
-        
+        print("=====> LOADING BUTTON 2")
         NSLayoutConstraint.activate([
             button.widthAnchor.constraint(equalToConstant: 50),
             button.heightAnchor.constraint(equalToConstant: 50),
             button.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
             button.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20)
         ])
+        print("=====> LOADING BUTTON 3")
+        
+        // Verify button is properly configured
+        print("=====> BUTTON FRAME: \(button.frame)")
+        print("=====> BUTTON IS USER INTERACTION ENABLED: \(button.isUserInteractionEnabled)")
+        print("=====> BUTTON ALPHA: \(button.alpha)")
+        
+        // Add a tap gesture recognizer as backup to test touch response
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(buttonAreaTapped))
+        button.addGestureRecognizer(tapGesture)
+        print("=====> TAP GESTURE ADDED AS BACKUP")
+    }
+
+    @objc private func buttonTouched() {
+        print("=====> BUTTON TOUCHED DOWN - Button is responding!")
+    }
+
+    @objc private func buttonAreaTapped() {
+        print("=====> BUTTON AREA TAPPED VIA GESTURE RECOGNIZER!")
+        toggleModal()
     }
 
     private func setupWebView() {
@@ -151,13 +184,18 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
     }
 
     @objc private func toggleModal() {
-        print("=====> TOGGLE MODAL")
+        print("=====> TOGGLE MODAL CALLED!")
+        print("=====> MODAL VIEW EXISTS: \(modalView != nil)")
+        
         if modalView == nil {
             print("=====> SETTING UP WEBVIEW")
             setupWebView()
             print("=====> WEBVIEW SET UP")
         }
-        modalView.isHidden = !modalView.isHidden
+        
+        let wasHidden = modalView.isHidden
+        modalView.isHidden = !wasHidden
+        print("=====> MODAL VISIBILITY CHANGED FROM \(wasHidden) TO \(modalView.isHidden)")
     }
 
     // MARK: - WKUIDelegate

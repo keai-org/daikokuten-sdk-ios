@@ -1,7 +1,7 @@
 import UIKit
 import WebKit
 
-public class ChatButtonViewController: UIViewController, WKNavigationDelegate, WKUIDelegate {
+public class ChatButtonViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UIGestureRecognizerDelegate {
     private var webView: WKWebView!
     private var button: UIButton!
     private var modalView: UIView!
@@ -35,6 +35,38 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         print("=====> VIEW DID APPEAR")
         print("=====> VIEW FRAME: \(view.frame)")
         print("=====> BUTTON FRAME AFTER APPEAR: \(button.frame)")
+        
+        // Verify button is properly positioned and visible
+        verifyButtonSetup()
+    }
+
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        print("=====> VIEW DID LAYOUT SUBVIEWS")
+        print("=====> BUTTON FRAME AFTER LAYOUT: \(button.frame)")
+        print("=====> VIEW SUBVIEWS COUNT: \(view.subviews.count)")
+        print("=====> BUTTON IS IN SUBVIEWS: \(view.subviews.contains(button))")
+    }
+
+    private func verifyButtonSetup() {
+        print("=====> VERIFYING BUTTON SETUP")
+        print("=====> BUTTON FRAME: \(button.frame)")
+        print("=====> BUTTON BOUNDS: \(button.bounds)")
+        print("=====> BUTTON CENTER: \(button.center)")
+        print("=====> BUTTON IS HIDDEN: \(button.isHidden)")
+        print("=====> BUTTON ALPHA: \(button.alpha)")
+        print("=====> BUTTON IS USER INTERACTION ENABLED: \(button.isUserInteractionEnabled)")
+        print("=====> BUTTON WINDOW: \(button.window?.description ?? "nil")")
+        print("=====> BUTTON SUPERVIEW: \(button.superview?.description ?? "nil")")
+        
+        // Check if button is within view bounds
+        let buttonFrameInWindow = button.convert(button.bounds, to: nil)
+        print("=====> BUTTON FRAME IN WINDOW: \(buttonFrameInWindow)")
+        
+        // Add a visual indicator to see if button is where we expect
+        button.layer.borderWidth = 2.0
+        button.layer.borderColor = UIColor.red.cgColor
+        print("=====> ADDED RED BORDER TO BUTTON FOR VISUAL DEBUGGING")
     }
 
     private func setupButton() {
@@ -46,6 +78,11 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         button.layer.cornerRadius = 25
         button.translatesAutoresizingMaskIntoConstraints = false
         
+        // Ensure button can receive touches
+        button.isUserInteractionEnabled = true
+        button.isMultipleTouchEnabled = false
+        button.isExclusiveTouch = true
+        
         // Add target with better debugging
         button.addTarget(self, action: #selector(toggleModal), for: .touchUpInside)
         print("=====> BUTTON TARGET ADDED")
@@ -53,8 +90,11 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         // Also add target for touch down to test if button is responding at all
         button.addTarget(self, action: #selector(buttonTouched), for: .touchDown)
         
+        // Add to view hierarchy first
         view.addSubview(button)
         print("=====> LOADING BUTTON 2")
+        
+        // Set constraints
         NSLayoutConstraint.activate([
             button.widthAnchor.constraint(equalToConstant: 50),
             button.heightAnchor.constraint(equalToConstant: 50),
@@ -67,11 +107,17 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         print("=====> BUTTON FRAME: \(button.frame)")
         print("=====> BUTTON IS USER INTERACTION ENABLED: \(button.isUserInteractionEnabled)")
         print("=====> BUTTON ALPHA: \(button.alpha)")
+        print("=====> BUTTON SUPERVIEW: \(button.superview?.description ?? "nil")")
         
         // Add a tap gesture recognizer as backup to test touch response
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(buttonAreaTapped))
+        tapGesture.delegate = self
         button.addGestureRecognizer(tapGesture)
         print("=====> TAP GESTURE ADDED AS BACKUP")
+        
+        // Force layout to get proper frame
+        view.layoutIfNeeded()
+        print("=====> BUTTON FRAME AFTER LAYOUT: \(button.frame)")
     }
 
     @objc private func buttonTouched() {
@@ -212,5 +258,21 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
     public func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
         print("WKWebView JavaScript Prompt: \(prompt)")
         completionHandler(defaultText)
+    }
+
+    // MARK: - UIGestureRecognizerDelegate
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
+    }
+    
+    // Override touch methods to debug touch events
+    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        print("=====> TOUCHES BEGAN ON VIEW CONTROLLER")
+        super.touchesBegan(touches, with: event)
+    }
+    
+    public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        print("=====> TOUCHES ENDED ON VIEW CONTROLLER")
+        super.touchesEnded(touches, with: event)
     }
 }

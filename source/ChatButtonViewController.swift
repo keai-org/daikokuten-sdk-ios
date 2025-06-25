@@ -97,7 +97,7 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         print("=====> LOADING BUTTON 3")
         
         // Add target actions AFTER adding to view hierarchy
-        button.addTarget(self, action: #selector(ChatButtonViewController.toggleModal(sender:)), for: .touchUpInside)
+        button.addTarget(self, action: #selector(toggleModal(sender:)), for: .touchUpInside)
         print("=====> BUTTON TARGETS ADDED")
         
         // Verify button is properly configured

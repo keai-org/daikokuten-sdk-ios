@@ -98,7 +98,9 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         
         // Add target actions AFTER adding to view hierarchy
         print("=====> BUTTON TARGETS ADDED")
-        button.addAction(UIAction(title: "Click Me", handler: { _ in  toggleModal()}), for: .menuActionTriggered)
+        button.addAction(UIAction(title: "Click Me", handler: { [weak self] _ in
+            self?.toggleModal()
+        }), for: .touchUpInside)
         
         // Verify button is properly configured
         print("=====> BUTTON FRAME: \(button.frame)")

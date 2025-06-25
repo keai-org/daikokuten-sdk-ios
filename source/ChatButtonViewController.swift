@@ -111,6 +111,22 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         print("=====> BUTTON FRAME AFTER LAYOUT: \(button.frame)")
     }
 
+    func toggleModal(sender: AnyObject) {
+        print("=====> TOGGLE MODAL CALLED!")
+        print("=====> TOGGLE MODAL - Thread: \(Thread.current)")
+        print("=====> TOGGLE MODAL - Main thread: \(Thread.isMainThread)")
+        print("=====> MODAL VIEW EXISTS: \(modalView != nil)")
+        
+        if modalView == nil {
+            print("=====> SETTING UP WEBVIEW")
+            setupWebView()
+            print("=====> WEBVIEW SET UP")
+        }
+        
+        let wasHidden = modalView.isHidden
+        modalView.isHidden = !wasHidden
+        print("=====> MODAL VISIBILITY CHANGED FROM \(wasHidden) TO \(modalView.isHidden)")
+    }
 
     private func setupWebView() {
         print("=====> LOADING WEBVIEW 1")
@@ -210,23 +226,6 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
     public func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         print("WKWebView authentication challenge: \(challenge.protectionSpace.host)")
         completionHandler(.performDefaultHandling, nil)
-    }
-
-    @objc private func toggleModal(sender: AnyObject) {
-        print("=====> TOGGLE MODAL CALLED!")
-        print("=====> TOGGLE MODAL - Thread: \(Thread.current)")
-        print("=====> TOGGLE MODAL - Main thread: \(Thread.isMainThread)")
-        print("=====> MODAL VIEW EXISTS: \(modalView != nil)")
-        
-        if modalView == nil {
-            print("=====> SETTING UP WEBVIEW")
-            setupWebView()
-            print("=====> WEBVIEW SET UP")
-        }
-        
-        let wasHidden = modalView.isHidden
-        modalView.isHidden = !wasHidden
-        print("=====> MODAL VISIBILITY CHANGED FROM \(wasHidden) TO \(modalView.isHidden)")
     }
 
     // MARK: - WKUIDelegate

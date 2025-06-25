@@ -1,7 +1,7 @@
 import UIKit
 import WebKit
 
-public class ChatButtonViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UIGestureRecognizerDelegate {
+public class ChatButtonViewController: UIViewController, WKNavigationDelegate, WKUIDelegate {
     private var webView: WKWebView!
     private var button: UIButton!
     private var modalView: UIView!
@@ -83,13 +83,6 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         button.isMultipleTouchEnabled = false
         button.isExclusiveTouch = true
         
-        // Add target with better debugging
-        button.addTarget(self, action: #selector(toggleModal), for: .touchUpInside)
-        print("=====> BUTTON TARGET ADDED")
-        
-        // Also add target for touch down to test if button is responding at all
-        button.addTarget(self, action: #selector(buttonTouched), for: .touchDown)
-        
         // Add to view hierarchy first
         view.addSubview(button)
         print("=====> LOADING BUTTON 2")
@@ -103,17 +96,16 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         ])
         print("=====> LOADING BUTTON 3")
         
+        // Add target actions AFTER adding to view hierarchy
+        button.addTarget(self, action: #selector(buttonTouched), for: .touchDown)
+        button.addTarget(self, action: #selector(toggleModal), for: .touchUpInside)
+        print("=====> BUTTON TARGETS ADDED")
+        
         // Verify button is properly configured
         print("=====> BUTTON FRAME: \(button.frame)")
         print("=====> BUTTON IS USER INTERACTION ENABLED: \(button.isUserInteractionEnabled)")
         print("=====> BUTTON ALPHA: \(button.alpha)")
         print("=====> BUTTON SUPERVIEW: \(button.superview?.description ?? "nil")")
-        
-        // Add a tap gesture recognizer as backup to test touch response
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(buttonAreaTapped))
-        tapGesture.delegate = self
-        button.addGestureRecognizer(tapGesture)
-        print("=====> TAP GESTURE ADDED AS BACKUP")
         
         // Force layout to get proper frame
         view.layoutIfNeeded()
@@ -122,11 +114,8 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
 
     @objc private func buttonTouched() {
         print("=====> BUTTON TOUCHED DOWN - Button is responding!")
-    }
-
-    @objc private func buttonAreaTapped() {
-        print("=====> BUTTON AREA TAPPED VIA GESTURE RECOGNIZER!")
-        toggleModal()
+        print("=====> BUTTON TOUCHED DOWN - Thread: \(Thread.current)")
+        print("=====> BUTTON TOUCHED DOWN - Main thread: \(Thread.isMainThread)")
     }
 
     private func setupWebView() {
@@ -231,6 +220,8 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
 
     @objc private func toggleModal() {
         print("=====> TOGGLE MODAL CALLED!")
+        print("=====> TOGGLE MODAL - Thread: \(Thread.current)")
+        print("=====> TOGGLE MODAL - Main thread: \(Thread.isMainThread)")
         print("=====> MODAL VIEW EXISTS: \(modalView != nil)")
         
         if modalView == nil {
@@ -258,21 +249,5 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
     public func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
         print("WKWebView JavaScript Prompt: \(prompt)")
         completionHandler(defaultText)
-    }
-
-    // MARK: - UIGestureRecognizerDelegate
-    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        return true
-    }
-    
-    // Override touch methods to debug touch events
-    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        print("=====> TOUCHES BEGAN ON VIEW CONTROLLER")
-        super.touchesBegan(touches, with: event)
-    }
-    
-    public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        print("=====> TOUCHES ENDED ON VIEW CONTROLLER")
-        super.touchesEnded(touches, with: event)
     }
 }

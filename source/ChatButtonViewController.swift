@@ -97,8 +97,8 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         print("=====> LOADING BUTTON 3")
         
         // Add target actions AFTER adding to view hierarchy
-        button.addTarget(self, action: #selector(toggleModal(sender:)), for: .touchUpInside)
         print("=====> BUTTON TARGETS ADDED")
+        button.addAction(UIAction(title: "Click Me", handler: { _ in  toggleModal()}), for: .menuActionTriggered)
         
         // Verify button is properly configured
         print("=====> BUTTON FRAME: \(button.frame)")
@@ -111,7 +111,7 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         print("=====> BUTTON FRAME AFTER LAYOUT: \(button.frame)")
     }
 
-    func toggleModal(sender: AnyObject) {
+    func toggleModal() {
         print("=====> TOGGLE MODAL CALLED!")
         print("=====> TOGGLE MODAL - Thread: \(Thread.current)")
         print("=====> TOGGLE MODAL - Main thread: \(Thread.isMainThread)")

@@ -218,10 +218,11 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         print("=====> LOADING WEBVIEW 2")
         modalView = UIView()
         modalView.backgroundColor = .white
-        modalView.layer.cornerRadius = 0 // Full screen, no rounded corners (like Android)
+        modalView.layer.cornerRadius = 0
         modalView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(modalView)
         print("=====> LOADING WEBVIEW 3")
+        
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .nonPersistent()
         
@@ -234,18 +235,22 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         webView.navigationDelegate = self
         webView.uiDelegate = self
         webView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // CRITICAL: Set WebView background and appearance
+        webView.backgroundColor = .white
+        webView.isOpaque = false
+        webView.scrollView.backgroundColor = .white
+        webView.scrollView.isOpaque = false
+        
         modalView.addSubview(webView)
         print("=====> LOADING WEBVIEW 4")
         
-        // Use full-screen modal constraints (like Android version)
+        // Make modalView and webView full screen
         NSLayoutConstraint.activate([
-            // Make modal view full screen
             modalView.topAnchor.constraint(equalTo: view.topAnchor),
             modalView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             modalView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             modalView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            
-            // Make webView fill the modal view
             webView.topAnchor.constraint(equalTo: modalView.topAnchor),
             webView.leadingAnchor.constraint(equalTo: modalView.leadingAnchor),
             webView.trailingAnchor.constraint(equalTo: modalView.trailingAnchor),
@@ -253,25 +258,50 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         ])
         print("=====> LOADING WEBVIEW 5")
         
+        // Force layout to ensure constraints are applied
+        view.layoutIfNeeded()
+        print("=====> WEBVIEW FRAME AFTER LAYOUT: \(webView.frame)")
+        print("=====> MODAL VIEW FRAME AFTER LAYOUT: \(modalView.frame)")
+        
         // Load initial HTML content with auth token (if available)
         loadWebViewContent(token: authToken)
         modalView.isHidden = true
     }
 
     public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        print("WKWebView error: \(error.localizedDescription)")
+        print("=====> WKWebView error: \(error.localizedDescription)")
+        print("=====> WKWebView error domain: \(error._domain)")
+        print("=====> WKWebView error code: \(error._code)")
     }
 
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        print("WKWebView: Page loaded successfully")
+        print("=====> WKWebView: Page loaded successfully")
+        print("=====> WKWebView frame: \(webView.frame)")
+        print("=====> WKWebView bounds: \(webView.bounds)")
+        print("=====> WKWebView is hidden: \(webView.isHidden)")
+        print("=====> WKWebView alpha: \(webView.alpha)")
+        
+        // Inject debugging JavaScript to check content
+        webView.evaluateJavaScript("document.body.innerHTML") { result, error in
+            if let error = error {
+                print("=====> JavaScript evaluation error: \(error)")
+            } else if let html = result as? String {
+                print("=====> WebView HTML content length: \(html.count)")
+                print("=====> WebView HTML preview: \(String(html.prefix(200)))")
+            }
+        }
     }
     
     public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        print("WKWebView navigation failed: \(error.localizedDescription)")
+        print("=====> WKWebView navigation failed: \(error.localizedDescription)")
+    }
+    
+    public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        print("=====> WKWebView: Started loading")
     }
     
     public func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        print("WKWebView authentication challenge: \(challenge.protectionSpace.host)")
+        print("=====> WKWebView authentication challenge: \(challenge.protectionSpace.host)")
         completionHandler(.performDefaultHandling, nil)
     }
 
@@ -311,22 +341,21 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         attestationService.generateKey { [weak self] keyId, error in
             if let error = error {
                 print("=====> App Attest key generation failed: \(error)")
-                // Fallback to debug mode
                 self?.sendAttestationToBackend(attestationToken: nil, packageName: Bundle.main.bundleIdentifier, signingCert: nil, completion: completion)
                 return
             }
             
-            attestationService.attestKey(keyId, clientDataHash: Data()) { attestation, error in
+            let clientDataHash = Data(nonce.utf8)
+            
+            attestationService.attestKey(keyId ?? "", clientDataHash: clientDataHash) { attestation, error in
                 if let error = error {
                     print("=====> App Attest failed: \(error)")
-                    // Fallback to debug mode
                     self?.sendAttestationToBackend(attestationToken: nil, packageName: Bundle.main.bundleIdentifier, signingCert: nil, completion: completion)
                     return
                 }
                 
-                // Convert attestation to base64 string
-                let attestationString = attestation.base64EncodedString()
-                self?.sendAttestationToBackend(attestationToken: attestationString, packageName: nil, signingCert: nil, completion: completion)
+                let attestationString = attestation?.base64EncodedString()
+                self?.sendAttestationToBackend(attestationToken: attestationString, packageName: Bundle.main.bundleIdentifier, signingCert: nil, completion: completion)
             }
         }
     }
@@ -343,7 +372,7 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
                 }
                 
                 // Convert token to base64 string
-                let tokenString = token.base64EncodedString()
+                let tokenString = token?.base64EncodedString()
                 self?.sendAttestationToBackend(attestationToken: tokenString, packageName: nil, signingCert: nil, completion: completion)
             }
         } else {
@@ -417,58 +446,107 @@ public class ChatButtonViewController: UIViewController, WKNavigationDelegate, W
         let testModeStr = testMode ? "true" : "false"
         let authTokenStr = token != nil ? "\"\(token!)\"" : "null"
         
-        let html = "<!DOCTYPE html>" +
-                "<html>" +
-                "<head>" +
-                "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
-                "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'self' https://daikokuten-7c6ffc95ca37.herokuapp.com; script-src 'self' 'unsafe-inline' https://daikokuten-7c6ffc95ca37.herokuapp.com https://cdn.jsdelivr.net https://cdn.socket.io; style-src 'self' 'unsafe-inline'; connect-src 'self' https://daikokuten-7c6ffc95ca37.herokuapp.com wss://daikokuten-7c6ffc95ca37.herokuapp.com;\">" +
-                "<script src=\"https://daikokuten-7c6ffc95ca37.herokuapp.com/sdk/web/index.js\" async></script>" +
-                "<script src=\"https://cdn.jsdelivr.net/npm/dompurify@2.4.1/dist/purify.min.js\" async></script>" +
-                "<style>" +
-                "html, body {" +
-                "margin: 0;" +
-                "padding: 0;" +
-                "width: 100%;" +
-                "height: 100%;" +
-                "overflow: hidden;" +
-                "}" +
-                "</style>" +
-                "<script>" +
-                "window.onload = function() {" +
-                "console.log(\"WebView loaded successfully\");" +
-                "function initDaikokuten() {" +
-                "console.log(\"Checking for Daikokuten and DOMPurify...\");" +
-                "if (typeof Daikokuten !== 'undefined' && typeof DOMPurify !== 'undefined') {" +
-                "console.log(\"DAIKOKUTEN CLASS INSTANCE\");" +
-                "const daikokuten = new Daikokuten(" +
-                "\"\(escapedUserId)\"," +
-                "\"\(escapedClientId)\"," +
-                "\(testModeStr)," +
-                "\"ios\"," +
-                "\"pro\"," +
-                "null," +
-                authTokenStr +
-                ");" +
-                "console.log(\"DAIKOKUTEN CLASS CREATED FOR \(escapedUserId)\");" +
-                "} else {" +
-                "console.log(\"DAIKOKUTEN RETRYING - Daikokuten: \" + (typeof Daikokuten) + \", DOMPurify: \" + (typeof DOMPurify));" +
-                "setTimeout(initDaikuten, 1000);" +
-                "}" +
-                "}" +
-                "console.log(\"DAIKOKUTEN INITIALIZING\");" +
-                "initDaikokuten();" +
-                "};" +
-                "</script>" +
-                "</head>" +
-                "<body></body>" +
-                "</html>"
+        let html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+            <meta name="format-detection" content="telephone=no">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://daikokuten-7c6ffc95ca37.herokuapp.com; script-src 'self' 'unsafe-inline' https://daikokuten-7c6ffc95ca37.herokuapp.com https://cdn.jsdelivr.net https://cdn.socket.io; style-src 'self' 'unsafe-inline'; connect-src 'self' https://daikokuten-7c6ffc95ca37.herokuapp.com wss://daikokuten-7c6ffc95ca37.herokuapp.com;">
+            <script src="https://daikokuten-7c6ffc95ca37.herokuapp.com/sdk/web/index.js" async></script>
+            <script src="https://cdn.jsdelivr.net/npm/dompurify@2.4.1/dist/purify.min.js" async></script>
+            <style>
+                html, body {
+                    margin: 0;
+                    padding: 0;
+                    width: 100%;
+                    height: 100vh;
+                    background-color: #ffffff;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    overflow: hidden;
+                }
+                #daikokuten-container {
+                    width: 100%;
+                    height: 100vh;
+                    background-color: #f0f0f0;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                }
+                #loading-message {
+                    color: #333;
+                    font-size: 18px;
+                    text-align: center;
+                    padding: 20px;
+                }
+                #debug-info {
+                    position: fixed;
+                    top: 10px;
+                    left: 10px;
+                    background: rgba(0,0,0,0.8);
+                    color: white;
+                    padding: 10px;
+                    border-radius: 5px;
+                    font-size: 12px;
+                    z-index: 1000;
+                }
+            </style>
+            <script>
+                window.onload = function() {
+                    console.log("WebView loaded successfully");
+                    document.body.style.backgroundColor = '#ffffff';
+                    
+                    // Add debug info
+                    const debugInfo = document.createElement('div');
+                    debugInfo.id = 'debug-info';
+                    debugInfo.innerHTML = 'WebView Loaded<br>UserID: \(escapedUserId)<br>ClientID: \(escapedClientId)<br>TestMode: \(testModeStr)';
+                    document.body.appendChild(debugInfo);
+                    
+                    function initDaikokuten() {
+                        console.log("Checking for Daikokuten and DOMPurify...");
+                        if (typeof Daikokuten !== 'undefined' && typeof DOMPurify !== 'undefined') {
+                            console.log("DAIKOKUTEN CLASS INSTANCE");
+                            const daikokuten = new Daikokuten(
+                                "\(escapedUserId)",
+                                "\(escapedClientId)",
+                                \(testModeStr),
+                                "ios",
+                                "pro",
+                                null,
+                                \(authTokenStr)
+                            );
+                            console.log("DAIKOKUTEN CLASS CREATED FOR \(escapedUserId)");
+                            
+                            // Update debug info
+                            debugInfo.innerHTML += '<br>Daikokuten: Loaded';
+                        } else {
+                            console.log("DAIKOKUTEN RETRYING - Daikokuten: " + (typeof Daikokuten) + ", DOMPurify: " + (typeof DOMPurify));
+                            debugInfo.innerHTML = 'Loading...<br>Daikokuten: ' + (typeof Daikokuten) + '<br>DOMPurify: ' + (typeof DOMPurify);
+                            setTimeout(initDaikokuten, 1000);
+                        }
+                    }
+                    console.log("DAIKOKUTEN INITIALIZING");
+                    initDaikokuten();
+                };
+            </script>
+        </head>
+        <body>
+            <div id="daikokuten-container">
+                <div id="loading-message">
+                    Loading Daikokuten Chat...
+                </div>
+            </div>
+        </body>
+        </html>
+        """
         
         print("ChatButtonViewController: Loading HTML with userId: \(escapedUserId), clientId: \(escapedClientId), testMode: \(testModeStr), token: \(token ?? "nil")")
         webView.loadHTMLString(html, baseURL: nil)
     }
 
     // MARK: - WKScriptMessageHandler
-    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+    public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         if message.name == "closeModal" {
             print("=====> CLOSE BUTTON CLICKED")
             toggleModal()

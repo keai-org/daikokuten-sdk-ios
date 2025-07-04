@@ -24,6 +24,124 @@ pod install
 
 ## Uso - Widget de Chat
 
+### Implementación SwiftUI
+
+El SDK proporciona wrappers de SwiftUI para una fácil integración con aplicaciones SwiftUI:
+
+#### Uso Básico de SwiftUI
+
+```swift
+import SwiftUI
+import daikokuten
+
+struct ContentView: View {
+    var body: some View {
+        VStack {
+            Text("Bienvenido a Mi App")
+                .font(.title)
+                .padding()
+            
+            Spacer()
+            
+            // Botón de chat básico
+            ChatButtonView(
+                userId: "user123",
+                clientId: "tu_client_id",
+                testMode: false
+            )
+        }
+    }
+}
+```
+
+#### Botón Personalizado con SwiftUI
+
+```swift
+import SwiftUI
+import daikokuten
+
+struct ContentView: View {
+    var body: some View {
+        VStack {
+            Text("Bienvenido a Mi App")
+                .font(.title)
+                .padding()
+            
+            Spacer()
+            
+            // Botón de chat personalizado
+            ChatButtonViewWithCustomButton(
+                userId: "user123",
+                clientId: "tu_client_id",
+                testMode: false
+            ) {
+                let button = UIButton(type: .system)
+                button.setTitle("💬 Chatea con nosotros", for: .normal)
+                button.setTitleColor(.white, for: .normal)
+                button.backgroundColor = .systemPurple
+                button.layer.cornerRadius = 20
+                button.contentEdgeInsets = UIEdgeInsets(top: 10, left: 20, bottom: 10, right: 20)
+                return button
+            }
+        }
+    }
+}
+```
+
+#### Botón de Chat con Callbacks
+
+```swift
+import SwiftUI
+import daikokuten
+
+struct ContentView: View {
+    @State private var isModalOpen = false
+    
+    var body: some View {
+        VStack {
+            Text("Bienvenido a Mi App")
+                .font(.title)
+                .padding()
+            
+            if isModalOpen {
+                Text("El chat está abierto")
+                    .foregroundColor(.green)
+            } else {
+                Text("El chat está cerrado")
+                    .foregroundColor(.gray)
+            }
+            
+            Spacer()
+            
+            // Botón de chat con callbacks
+            ChatButtonViewWithCoordinator(
+                userId: "user123",
+                clientId: "tu_client_id",
+                testMode: false,
+                onModalOpened: {
+                    isModalOpen = true
+                    print("Modal de chat abierto")
+                },
+                onModalClosed: {
+                    isModalOpen = false
+                    print("Modal de chat cerrado")
+                }
+            )
+        }
+    }
+}
+```
+
+#### Wrappers de SwiftUI Disponibles
+
+El SDK proporciona tres wrappers de SwiftUI:
+
+1. **`ChatButtonView`**: Wrapper básico con botón predeterminado
+2. **`ChatButtonViewWithCustomButton`**: Wrapper que acepta un closure constructor de botón personalizado
+3. **`ChatButtonViewWithCoordinator`**: Wrapper con soporte de callbacks para cambios de estado del modal
+
+### UIKit Implementation
+
 ### Implementación Básica
 
 Agrega el `ChatButtonViewController` a tu controlador de vista:
@@ -40,7 +158,10 @@ class ViewController: UIViewController {
         // Crear controlador de vista del botón de chat
         let chatView = ChatButtonViewController(
             userId: "testUser123",
-            testMode: false
+            clientId: "tu_client_id",
+            testMode: false,
+            authToken: nil,
+            customButton: nil
         )
         
         // Agregar como controlador hijo (IMPORTANTE para el ciclo de vida correcto)
@@ -74,7 +195,8 @@ class ViewController: UIViewController {
             userId: "testUser123",
             clientId: "tu_client_id",
             testMode: false,
-            authToken: nil
+            authToken: nil,
+            customButton: nil
         )
         
         // Agregar como controlador hijo
@@ -221,6 +343,7 @@ Parámetros:
 
 - iOS 13.0+
 - Swift 5.0+
+- SwiftUI 2.0+ (for SwiftUI integration)
 - CocoaPods
 
 ## Solución de Problemas
@@ -354,7 +477,10 @@ Habilitar modo de prueba para ver información de depuración:
 ```swift
 let chatView = ChatButtonViewController(
     userId: "testUser123",
-    testMode: true  // Habilitar modo de depuración
+    clientId: "tu_client_id",
+    testMode: true,  // Habilitar modo de depuración
+    authToken: nil,
+    customButton: nil
 )
 ```
 
